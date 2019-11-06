@@ -209,7 +209,63 @@
 </div>
 <!-- 뷰모델 시작 -->
 <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
-<script src="test.js"></script>
+<script>
+
+function sendRequest() {
+			const httpRequest = new XMLHttpRequest();
+
+			httpRequest.onreadystatechange = function() {
+				if (httpRequest.readyState == XMLHttpRequest.DONE && httpRequest.status == 200 ) {
+					
+					const result = JSON.parse(httpRequest.responseText);
+
+					let imgTag = document.createElement("img"),
+						imgSrc = "https://instagram.ficn1-1.fna.fbcdn.net/vp/0dc4017bd3e62e64eab396b3126f28a5/5E5FEF63/t51.2885-15/sh0.08/e35/s640x640/74676940_541932999686773_1133311251138150637_n.jpg?_nc_ht=instagram.ficn1-1.fna.fbcdn.net&amp;_nc_cat=1";
+					const Nnq7CDiv  = document.createElement("div"),
+						  v1Nh3Div  = document.createElement("div"),
+						  a		    = document.createElement("a"),
+						  eLAPaDiv  = document.createElement("div"),
+						  KL4BhDiv  = document.createElement("div"),
+						  _9AhH0Div = document.createElement("div"),
+						  u7YqGDiv  = document.createElement("div"),
+						  span      = document.createElement("span"),
+						  app       = document.getElementById("app");					
+
+					Nnq7CDiv.setAttribute("class", "Nnq7C weEfm");	  
+					v1Nh3Div.setAttribute("class", "v1Nh3 kIKUG _bz0w");
+					a.setAttribute("href", "javascript:;");
+					eLAPaDiv.setAttribute("class", "eLAPa");
+					KL4BhDiv.setAttribute("class", "KL4Bh");
+					_9AhH0Div.setAttribute("class", "_9AhH0");
+					u7YqGDiv.setAttribute("class", "u7YqG");
+					span.setAttribute("aria-label", "슬라이드");
+					span.setAttribute("class", "mediatypesSpriteCarousel__filled__32 u-__7");
+					imgTag.setAttribute("class", "FFVAD");
+					imgTag.setAttribute("decoding", "auto");
+					imgTag.setAttribute("src", imgSrc);
+
+					KL4BhDiv.appendChild(imgTag);
+					eLAPaDiv.appendChild(KL4BhDiv);
+					eLAPaDiv.appendChild(_9AhH0Div);
+					u7YqGDiv.appendChild(span);
+					v1Nh3Div.appendChild(a);
+					v1Nh3Div.appendChild(eLAPaDiv);
+					v1Nh3Div.appendChild(u7YqGDiv);
+
+					
+					Nnq7CDiv.appendChild(v1Nh3Div);
+				
+					app.append(Nnq7CDiv);
+				}
+			};
+			
+			httpRequest.open("GET", "https://my-json-server.typicode.com/it-crafts/mockapi/timeline", true);
+			httpRequest.setRequestHeader("Content-Type", "application/json");
+			httpRequest.send();
+		}
+
+sendRequest();		
+</script>
 <!-- 뷰모델 종료 -->
 </body>
 </html>
