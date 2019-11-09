@@ -1,4 +1,3 @@
-
 const module = (() => {
     
     const model = {
@@ -74,13 +73,12 @@ const module = (() => {
         },
 
         engine : function(template) {
-            engine[selector] = template;
         
             return {
                 render(data) {
                     let html = '';
                     data.forEach(data => {
-                        html += engine[selector].replace(/{{ *(\w+) *}}/g, (m, key) => data[key]);
+                        html += template.replace(/{{ *(\w+) *}}/g, (m, key) => data[key]);
                     })
                     return html;
                 }
@@ -94,7 +92,5 @@ const module = (() => {
         execute : model.getData().then(function (res) {
             view.render(res.data);
         })
-
-    }
-    
+    }   
 })();
