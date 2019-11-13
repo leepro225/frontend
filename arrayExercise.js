@@ -1,4 +1,4 @@
-// TODO 특별히 인덱스가 로직이 필요하지 않은 경우, forEach, for in, for of 등 사용 (forEach 기반 함수형로직 권장)
+// 특별히 인덱스가 로직이 필요하지 않은 경우, forEach, for in, for of 등 사용 (forEach 기반 함수형로직 권장)
 
 // for문 : 반복 횟수가 정해진 경우 주로 사용
 {
