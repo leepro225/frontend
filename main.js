@@ -104,12 +104,15 @@ function root() {
         // 컬러를 변경한다.
         let targetParent = this.parentNode.childNodes;
 
+        console.log(targetParent);
         targetParent.forEach(function(crr) {
             if (crr.childNodes.length !== 0) {
+                crr.className = '_9VEo1';
                 crr.childNodes[0].className = crr.childNodes[0].className.replace(/blue/gi, 'grey');
             }
         });
 
+        this.className = '_9VEo1 T-jvg';
         this.children[0].className = this.children[0].className.replace(/grey/gi, 'blue');
         
         // 기존 app의 이벤트를 제거한다
