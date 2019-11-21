@@ -41,7 +41,7 @@ function Module(url, urlInfo, selector, template) {
 
     // 스크롤 이벤트
     const scrollEvent = async function() {
-            
+        
         if(pageYOffset + document.scrollingElement.offsetHeight < document.body.scrollHeight * 0.9) { 
             return;
         }
@@ -119,6 +119,7 @@ function root() {
         module.destroy();
         
         // XXX 기존 app의 메모리를 초기화한다 -> network tab의 기존 메모리는 어떻게 초기화 할 수 있나요?
+        // 개발자도구의 네트워크 디버거 - 브라우저에서 쌓는 로그로, APP의 메모리와 별개입니다
         
         
         // 새 app을 init한다
@@ -135,3 +136,4 @@ function root() {
 root();
 
 
+// 잘했어요
