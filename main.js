@@ -1,6 +1,8 @@
 const _loading = document.querySelector('._4emnV');
 
-function Module(url, urlInfo, selector, template) {
+// TODO param = {}와 같이 파라미터 객체를 받도록 리팩토링 해보세요 - 파라미터가 많아질 경우 객체에 담는 게 조금 더 깔끔합니다
+// TODO 클래스 내부에서 사용한 if-else 분기문 걷어내주세요 - 따로 표시 해두었습니다
+function Timeline(url, urlInfo, selector, template) {
     const app = document.querySelector(selector);
     let page = 1;
     let totalPage = 1;   
@@ -18,6 +20,7 @@ function Module(url, urlInfo, selector, template) {
                 let result = await axios.get(url + page);
                 page++;
 
+                // TODO 위아래 로직 하나로 합치고, 아래 라인만 예외조건으로 따로 걸어주세요
                 return result.data.data.map(l => l.reduce((o, v, i) => (o[`src${i+1}`] = v, o), {}));
             }
         } catch (e) {
@@ -35,6 +38,7 @@ function Module(url, urlInfo, selector, template) {
             });
         } else {
             result.forEach(data => {
+                // TODO 위아래 로직 하나로 합쳐주세요 - 둘 다 함수로 하거나, 둘 다 정규식으로 하거나
                 html += template.replace(/{{ *(\w+) *}}/g, (m, key) => data[key] || '');
             });
             // test
@@ -48,6 +52,7 @@ function Module(url, urlInfo, selector, template) {
         excute();
         const timelineInfo = await axios.get(urlInfo);
         totalPage = timelineInfo.data.data.totalPage;
+        // TODO totalPage가 1보다 클 경우에만 이벤트 붙이도록 고도화 해주세요
         addEvent(); 
         _loading.style.display = 'none';
     }
@@ -82,6 +87,7 @@ function Module(url, urlInfo, selector, template) {
         window.removeEventListener('scroll', scrollEvent);
     }
 
+    // TODO excute 대신 조금 더 구체적인 이름이면 더 좋을 것 같아요
     const excute = async () => {
         view(await model());
     };
@@ -93,7 +99,9 @@ function Module(url, urlInfo, selector, template) {
     }
 }
 
+// TODO root도 Module처럼 Root 생성자로 만들어주세요
 function root() {
+    // TODO 파라미터 객체 만들어서 각각 묶어주세요 - ex. { url, urlInfo, selector, template }
     const url = 'https://my-json-server.typicode.com/it-crafts/mockapi/timeline/';
     const urlInfo = url + "info";
     const selector = "#app";
@@ -207,7 +215,7 @@ function root() {
         if (this.children[0].className.indexOf('grid') > -1) {
             
             // timeline을 호출한다
-            module = new Module(url, urlInfo, selector, template);  
+            module = new Timeline(url, urlInfo, selector, template);  
         } else if (this.children[0].className.indexOf('list') > -1) {
 
             const appDiv = document.querySelector(selector);
@@ -215,21 +223,22 @@ function root() {
             </div>`;
             
             // feed를 호출한다.
-            module = new Module(url2, urlInfo2, selector2, template2); 
+            module = new Timeline(url2, urlInfo2, selector2, template2); 
         } else if (this.children[0].className.indexOf('up') > -1) {
 
             // timeline을 호출한다
-            module = new Module(url, urlInfo, selector, template);  
+            module = new Timeline(url, urlInfo, selector, template);  
         }
                 
         
     };
     
+    // TODO Module과 동일하게 이벤트 붙이고 뗄 수 있는 구조로 고도화 해주세요 + destroy도 만들어주세요
     document.querySelectorAll('.fx7hk > a').forEach(tabButton => {
         tabButton.addEventListener('click', clickEvent);
     });
 
-    let module = new Module(url, urlInfo, selector, template);    
+    let module = new Timeline(url, urlInfo, selector, template);    
 }
 
 root();
