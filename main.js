@@ -1,28 +1,27 @@
 const _loading = document.querySelector('._4emnV');
 
 // TODO param = {}와 같이 파라미터 객체를 받도록 리팩토링 해보세요 - 파라미터가 많아질 경우 객체에 담는 게 조금 더 깔끔합니다
-// TODO 클래스 내부에서 사용한 if-else 분기문 걷어내주세요 - 따로 표시 해두었습니다
-function Timeline(url, urlInfo, selector, template) {
-    const app = document.querySelector(selector);
+function Timeline(param = {}) {
+    const _url = param.url;
+    const _urlInfo = param.urlInfo;
+    const _template = param.template;
+    const _selector =param.selector;
+    const app = document.querySelector(_selector);
     let page = 1;
     let totalPage = 1;   
      
     // 데이터 요청 및 가공
     const model = async () => { 
         try {
-            if (app.id === 'feed') {
-                const res = await fetch(url + (page));
-                page ++;
-                const { data } = await res.json();
-    
-                return data;
-            } else {
-                let result = await axios.get(url + page);
-                page++;
+            const res = await fetch(_url + (page));
+            page ++;
+            const { data } = await res.json();
 
-                // TODO 위아래 로직 하나로 합치고, 아래 라인만 예외조건으로 따로 걸어주세요
-                return result.data.data.map(l => l.reduce((o, v, i) => (o[`src${i+1}`] = v, o), {}));
-            }
+            if (app.id === 'app') {
+                return data.map(l => l.reduce((o, v, i) => (o[`src${i+1}`] = v, o), {}));
+            } 
+            return data;
+
         } catch (e) {
             return {};
         }
@@ -31,29 +30,22 @@ function Timeline(url, urlInfo, selector, template) {
     // 뷰 렌더링
     const view = (result) => {
         let html = '';
-
-        if (app.id ==='feed') {
-            result.forEach(data => {
-                html += template(data);
-            });
-        } else {
-            result.forEach(data => {
-                // TODO 위아래 로직 하나로 합쳐주세요 - 둘 다 함수로 하거나, 둘 다 정규식으로 하거나
-                html += template.replace(/{{ *(\w+) *}}/g, (m, key) => data[key] || '');
-            });
-            // test
-        }
+  
+        result.forEach(data => {
+            html += _template.replace(/{{ *(\w+) *}}/g, (m, key) => data[key] || '');
+        });
         app.innerHTML += html;
     };
 
     // 그 이외 
     const controller = async () => {
         _loading.style.display = '';
-        excute();
-        const timelineInfo = await axios.get(urlInfo);
+        render();
+        const timelineInfo = await axios.get(_urlInfo);
         totalPage = timelineInfo.data.data.totalPage;
-        // TODO totalPage가 1보다 클 경우에만 이벤트 붙이도록 고도화 해주세요
-        addEvent(); 
+        if (totalPage > 1) {
+            addEvent(); 
+        }
         _loading.style.display = 'none';
     }
 
@@ -67,7 +59,7 @@ function Timeline(url, urlInfo, selector, template) {
             return;
         }
         _loading.style.display = '';       
-        await excute();      
+        await render();      
         if(page > totalPage) {
             removeEvent();
         }   
@@ -86,9 +78,8 @@ function Timeline(url, urlInfo, selector, template) {
     const removeEvent = () => {
         window.removeEventListener('scroll', scrollEvent);
     }
-
-    // TODO excute 대신 조금 더 구체적인 이름이면 더 좋을 것 같아요
-    const excute = async () => {
+    // XXX excute - > render했는데, 적절한 네이밍인가요?
+    const render = async () => {
         view(await model());
     };
 
@@ -99,95 +90,98 @@ function Timeline(url, urlInfo, selector, template) {
     }
 }
 
-// TODO root도 Module처럼 Root 생성자로 만들어주세요
-function root() {
-    // TODO 파라미터 객체 만들어서 각각 묶어주세요 - ex. { url, urlInfo, selector, template }
-    const url = 'https://my-json-server.typicode.com/it-crafts/mockapi/timeline/';
-    const urlInfo = url + "info";
-    const selector = "#app";
-    const template = `<div class="Nnq7C weEfm"><div class="v1Nh3 kIKUG _bz0w"><a href="javascript:;"><div class="eLAPa">
-                    <div class="KL4Bh"><img class="FFVAD" decoding="auto" src="https://raw.githubusercontent.com/it-crafts/mockapi/master{{src1}}" style="object-fit: cover;"></div>
-                    <div class="_9AhH0"></div></div><div class="u7YqG"><span aria-label="슬라이드" class="mediatypesSpriteCarousel__filled__32 u-__7"></span></div></a></div><div class="v1Nh3 kIKUG _bz0w"><a href="javascript:;">
-                    <div class="eLAPa"><div class="KL4Bh"><img class="FFVAD" decoding="auto" src="https://raw.githubusercontent.com/it-crafts/mockapi/master{{  src2 }}" style="object-fit: cover;"></div><div class="_9AhH0"></div></div>
-                    <div class="u7YqG"><span aria-label="슬라이드" class="mediatypesSpriteCarousel__filled__32 u-__7"></span></div></a></div>
-                    <div class="v1Nh3 kIKUG _bz0w"><a href="javascript:;">
-                    <div class="eLAPa"><div class="KL4Bh"><img class="FFVAD" decoding="auto" src="https://raw.githubusercontent.com/it-crafts/mockapi/master{{ src3  }}" style="object-fit: cover;"></div><div class="_9AhH0"></div></div>
-                    <div class="u7YqG"><span aria-label="슬라이드" class="mediatypesSpriteCarousel__filled__32 u-__7"></span></div></a></div></div>`;
-    
-    const url2 = 'https://my-json-server.typicode.com/it-crafts/mockapi/feed/';
-    const urlInfo2 = url2 + 'info';
-    const selector2 = '#feed';
-    const template2 = function({img, text, commentCount, clickCount}){
-        return `<article class="M9sTE h0YNM SgTZ1 "><header class="Ppjfr UE9AK wdOqh">
-        <div class="RR-M- h5uC0 mrq0Z" role="button" tabindex="0">
-            <canvas class="CfWVH" height="126" width="126" style="position: absolute; top: -5px; left: -5px; width: 42px; height: 42px;"></canvas><span class="_2dbep " role="link" tabindex="0" style="width: 32px; height: 32px;"><img alt="twicetagram님의 프로필 사진" class="_6q-tv" src="https://scontent-icn1-1.cdninstagram.com/vp/60d5672c78325263e8a9b6d7bf4d8550/5E87F77A/t51.2885-19/s150x150/14350502_2130269970532564_1274547492301570048_a.jpg?_nc_ht=scontent-icn1-1.cdninstagram.com"></span>
-        </div>
-        <div class="o-MQd ">
-            <div class=" ">
-                <div class="e1e1d">
-                    <h2 class="BrX75"><a class="FPmhX notranslate nJAzx" title="twicetagram" href="javascript:;">twicetagram</a></h2>
-                </div>
+
+function Root() {
+
+    const param1 = {
+        url : 'https://my-json-server.typicode.com/it-crafts/mockapi/timeline/',
+        urlInfo : 'https://my-json-server.typicode.com/it-crafts/mockapi/timeline/' + "info",
+        selector : "#app",
+        template : `<div class="Nnq7C weEfm"><div class="v1Nh3 kIKUG _bz0w"><a href="javascript:;"><div class="eLAPa">
+                        <div class="KL4Bh"><img class="FFVAD" decoding="auto" src="https://raw.githubusercontent.com/it-crafts/mockapi/master{{src1}}" style="object-fit: cover;"></div>
+                        <div class="_9AhH0"></div></div><div class="u7YqG"><span aria-label="슬라이드" class="mediatypesSpriteCarousel__filled__32 u-__7"></span></div></a></div><div class="v1Nh3 kIKUG _bz0w"><a href="javascript:;">
+                        <div class="eLAPa"><div class="KL4Bh"><img class="FFVAD" decoding="auto" src="https://raw.githubusercontent.com/it-crafts/mockapi/master{{  src2 }}" style="object-fit: cover;"></div><div class="_9AhH0"></div></div>
+                        <div class="u7YqG"><span aria-label="슬라이드" class="mediatypesSpriteCarousel__filled__32 u-__7"></span></div></a></div>
+                        <div class="v1Nh3 kIKUG _bz0w"><a href="javascript:;">
+                        <div class="eLAPa"><div class="KL4Bh"><img class="FFVAD" decoding="auto" src="https://raw.githubusercontent.com/it-crafts/mockapi/master{{ src3  }}" style="object-fit: cover;"></div><div class="_9AhH0"></div></div>
+                        <div class="u7YqG"><span aria-label="슬라이드" class="mediatypesSpriteCarousel__filled__32 u-__7"></span></div></a></div></div>`
+    }
+
+    const param2 = {
+         url : 'https://my-json-server.typicode.com/it-crafts/mockapi/feed/',
+         urlInfo : 'https://my-json-server.typicode.com/it-crafts/mockapi/feed/' + 'info',
+         selector : '#feed',
+         template :  `<article class="M9sTE h0YNM SgTZ1 "><header class="Ppjfr UE9AK wdOqh">
+            <div class="RR-M- h5uC0 mrq0Z" role="button" tabindex="0">
+                <canvas class="CfWVH" height="126" width="126" style="position: absolute; top: -5px; left: -5px; width: 42px; height: 42px;"></canvas><span class="_2dbep " role="link" tabindex="0" style="width: 32px; height: 32px;"><img alt="twicetagram님의 프로필 사진" class="_6q-tv" src="https://scontent-icn1-1.cdninstagram.com/vp/60d5672c78325263e8a9b6d7bf4d8550/5E87F77A/t51.2885-19/s150x150/14350502_2130269970532564_1274547492301570048_a.jpg?_nc_ht=scontent-icn1-1.cdninstagram.com"></span>
             </div>
-            <div class="M30cS">
-                <div>
-                </div>
-                <div class="JF9hh">
-                </div>
-            </div>
-        </div>
-        </header>
-        <div class="_97aPb ">
-            <div role="button" tabindex="0" class="ZyFrc">
-                <div class="eLAPa kPFhm">
-                    <div class="KL4Bh" style="padding-bottom: 100%;">
-                        <img class="FFVAD" src="https://raw.githubusercontent.com/it-crafts/mockapi/master${img}" style="object-fit: cover;">
+            <div class="o-MQd ">
+                <div class=" ">
+                    <div class="e1e1d">
+                        <h2 class="BrX75"><a class="FPmhX notranslate nJAzx" title="twicetagram" href="javascript:;">twicetagram</a></h2>
                     </div>
-                    <div class="_9AhH0">
+                </div>
+                <div class="M30cS">
+                    <div>
+                    </div>
+                    <div class="JF9hh">
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="eo2As ">
-            <section class="ltpMr Slqrh"><span class="fr66n"><button class="dCJp8 afkep"><span aria-label="좋아요" class="glyphsSpriteHeart__outline__24__grey_9 u-__7"></span></button></span><span class="_15y0l"><button class="dCJp8 afkep"><span aria-label="댓글 달기" class="glyphsSpriteComment__outline__24__grey_9 u-__7"></span></button></span><span class="_5e4p"><button class="dCJp8 afkep"><span aria-label="게시물 공유" class="glyphsSpriteDirect__outline__24__grey_9 u-__7"></span></button></span><span class="wmtNn"><button class="dCJp8 afkep"><span aria-label="저장" class="glyphsSpriteSave__outline__24__grey_9 u-__7"></span></button></span></section><section class="EDfFK ygqzn">
-            <div class=" Igw0E IwRSH eGOV_ ybXk5 vwCYk ">
-                <div class="Nm9Fw">
-                    <a class="zV_Nj" href="javascript:;">좋아요 <span>${clickCount}</span>개</a>
+            </header>
+            <div class="_97aPb ">
+                <div role="button" tabindex="0" class="ZyFrc">
+                    <div class="eLAPa kPFhm">
+                        <div class="KL4Bh" style="padding-bottom: 100%;">
+                            <img class="FFVAD" src="https://raw.githubusercontent.com/it-crafts/mockapi/master{{img}}" style="object-fit: cover;">
+                        </div>
+                        <div class="_9AhH0">
+                        </div>
+                    </div>
                 </div>
             </div>
-            </section>
-            <div class="KlCQn EtaWk">
-                <ul class="k59kT">
-                    <div role="button" class="ZyFrc">
-                        <li class="gElp9 " role="menuitem">
-                        <div class="P9YgZ">
-                            <div class="C7I1f X7jCj">
-                                <div class="C4VMK">
-                                    <h2 class="_6lAjh"><a class="FPmhX notranslate TlrDj" title="twicetagram" href="javascript:;">twicetagram</a></h2>
-                                    <span><span>${text}</span></span>
+            <div class="eo2As ">
+                <section class="ltpMr Slqrh"><span class="fr66n"><button class="dCJp8 afkep"><span aria-label="좋아요" class="glyphsSpriteHeart__outline__24__grey_9 u-__7"></span></button></span><span class="_15y0l"><button class="dCJp8 afkep"><span aria-label="댓글 달기" class="glyphsSpriteComment__outline__24__grey_9 u-__7"></span></button></span><span class="_5e4p"><button class="dCJp8 afkep"><span aria-label="게시물 공유" class="glyphsSpriteDirect__outline__24__grey_9 u-__7"></span></button></span><span class="wmtNn"><button class="dCJp8 afkep"><span aria-label="저장" class="glyphsSpriteSave__outline__24__grey_9 u-__7"></span></button></span></section><section class="EDfFK ygqzn">
+                <div class=" Igw0E IwRSH eGOV_ ybXk5 vwCYk ">
+                    <div class="Nm9Fw">
+                        <a class="zV_Nj" href="javascript:;">좋아요 <span>{{clickCount}}</span>개</a>
+                    </div>
+                </div>
+                </section>
+                <div class="KlCQn EtaWk">
+                    <ul class="k59kT">
+                        <div role="button" class="ZyFrc">
+                            <li class="gElp9 " role="menuitem">
+                            <div class="P9YgZ">
+                                <div class="C7I1f X7jCj">
+                                    <div class="C4VMK">
+                                        <h2 class="_6lAjh"><a class="FPmhX notranslate TlrDj" title="twicetagram" href="javascript:;">twicetagram</a></h2>
+                                        <span><span>{{text}}</span></span>
+                                    </div>
                                 </div>
                             </div>
+                            </li>
                         </div>
-                        </li>
-                    </div>
-                    <li class="lnrre"><button class="Z4IfV sqdOP yWX7d y3zKF " type="button">댓글 <span>${commentCount}</span>개 모두 보기</button></li>
-                </ul>
+                        <li class="lnrre"><button class="Z4IfV sqdOP yWX7d y3zKF " type="button">댓글 <span>{{commentCount}}</span>개 모두 보기</button></li>
+                    </ul>
+                </div>
+                <div class="k_Q0X NnvRN">
+                    <a class="c-Yi7" href="javascript:;"><time class="_1o9PC Nzb55" datetime="2019-11-22T14:05:19.000Z" title="2019년 11월 22일">13시간 전</time></a>
+                </div>
+                <section class="sH9wk _JgwE eJg28">
+                <div class="RxpZH">
+                    <form class="X7cDz" method="POST">
+                        <textarea aria-label="댓글 달기..." placeholder="댓글 달기..." class="Ypffh" autocomplete="off" autocorrect="off" style="height: 18px;"></textarea><button class="sqdOP yWX7d y3zKF " disabled="" type="submit">게시</button>
+                    </form>
+                </div>
+                </section>
             </div>
-            <div class="k_Q0X NnvRN">
-                <a class="c-Yi7" href="javascript:;"><time class="_1o9PC Nzb55" datetime="2019-11-22T14:05:19.000Z" title="2019년 11월 22일">13시간 전</time></a>
+            <div class="MEAGs">
+                <button class="dCJp8 afkep"><span aria-label="옵션 더 보기" class="glyphsSpriteMore_horizontal__outline__24__grey_9 u-__7"></span></button>
             </div>
-            <section class="sH9wk _JgwE eJg28">
-            <div class="RxpZH">
-                <form class="X7cDz" method="POST">
-                    <textarea aria-label="댓글 달기..." placeholder="댓글 달기..." class="Ypffh" autocomplete="off" autocorrect="off" style="height: 18px;"></textarea><button class="sqdOP yWX7d y3zKF " disabled="" type="submit">게시</button>
-                </form>
-            </div>
-            </section>
-        </div>
-        <div class="MEAGs">
-            <button class="dCJp8 afkep"><span aria-label="옵션 더 보기" class="glyphsSpriteMore_horizontal__outline__24__grey_9 u-__7"></span></button>
-        </div>
-        </article>`;
-    } 
+            </article>`
+    }
+    
 
     const clickEvent = async function(e) {
     
@@ -215,32 +209,32 @@ function root() {
         if (this.children[0].className.indexOf('grid') > -1) {
             
             // timeline을 호출한다
-            module = new Timeline(url, urlInfo, selector, template);  
+            
+            module = new Timeline(param1);  
         } else if (this.children[0].className.indexOf('list') > -1) {
 
-            const appDiv = document.querySelector(selector);
+            const appDiv = document.querySelector("#app");
             appDiv.innerHTML = `<div style="flex-direction: column;" id="feed">
             </div>`;
             
             // feed를 호출한다.
-            module = new Timeline(url2, urlInfo2, selector2, template2); 
+            module = new Timeline(param2); 
         } else if (this.children[0].className.indexOf('up') > -1) {
 
             // timeline을 호출한다
-            module = new Timeline(url, urlInfo, selector, template);  
+            module = new Timeline(param1);  
         }
                 
         
     };
-    
-    // TODO Module과 동일하게 이벤트 붙이고 뗄 수 있는 구조로 고도화 해주세요 + destroy도 만들어주세요
+     // TODO Module과 동일하게 이벤트 붙이고 뗄 수 있는 구조로 고도화 해주세요 + destroy도 만들어주세요
     document.querySelectorAll('.fx7hk > a').forEach(tabButton => {
         tabButton.addEventListener('click', clickEvent);
     });
 
-    let module = new Timeline(url, urlInfo, selector, template);    
+    let module = new Timeline(param1);    
 }
 
-root();
+const root = new Root();
 
 
