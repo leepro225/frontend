@@ -1,53 +1,48 @@
 const _loading = document.querySelector('._4emnV');
 
-// TODO param = {}와 같이 파라미터 객체를 받도록 리팩토링 해보세요 - 파라미터가 많아질 경우 객체에 담는 게 조금 더 깔끔합니다
-function Timeline(param = {}) {
+function Timeline(selector, param = {}) {
+    const timeline = document.querySelector(selector);
     const _url = param.url;
-    const _urlInfo = param.urlInfo;
     const _template = param.template;
-    const _selector =param.selector;
-    const app = document.querySelector(_selector);
-    let page = 1;
-    let totalPage = 1;   
+    let _page = 1;
+    let _totalPage = 1;   
+
+    const init = async () => {
+        _loading.style.display = '';
+        renderMore(await getDataMore());
+        const timelineInfo = await axios.get(_url + 'info');
+        _totalPage = timelineInfo.data.data.totalPage;
+        if (_totalPage > 1) {
+            addEvent(); 
+        }
+        _loading.style.display = 'none';
+    }
      
     // 데이터 요청 및 가공
-    const model = async () => { 
+    const getDataMore = async () => { // model
         try {
-            const res = await fetch(_url + (page));
-            page ++;
+            const res = await fetch(_url + (_page));
+            _page ++;
             const { data } = await res.json();
 
-            if (app.id === 'app') {
+            if (_url.includes('timeline')) {
                 return data.map(l => l.reduce((o, v, i) => (o[`src${i+1}`] = v, o), {}));
-            } 
+            }
             return data;
-
         } catch (e) {
             return {};
         }
     };
     
     // 뷰 렌더링
-    const view = (result) => {
+    const renderMore = (datas) => { // view
         let html = '';
   
-        result.forEach(data => {
+        datas.forEach(data => {
             html += _template.replace(/{{ *(\w+) *}}/g, (m, key) => data[key] || '');
         });
-        app.innerHTML += html;
+        timeline.innerHTML += html;
     };
-
-    // 그 이외 
-    const controller = async () => {
-        _loading.style.display = '';
-        render();
-        const timelineInfo = await axios.get(_urlInfo);
-        totalPage = timelineInfo.data.data.totalPage;
-        if (totalPage > 1) {
-            addEvent(); 
-        }
-        _loading.style.display = 'none';
-    }
 
     // 스크롤 이벤트
     const scrollEvent = async function() {
@@ -59,8 +54,8 @@ function Timeline(param = {}) {
             return;
         }
         _loading.style.display = '';       
-        await render();      
-        if(page > totalPage) {
+        renderMore(await getDataMore());
+        if(_page > _totalPage) {
             removeEvent();
         }   
         _loading.style.display = 'none';
@@ -72,18 +67,14 @@ function Timeline(param = {}) {
     
     const destroy = () => {
         removeEvent();
-        app.innerHTML = '';
+        timeline.innerHTML = '';
     }
 
     const removeEvent = () => {
         window.removeEventListener('scroll', scrollEvent);
     }
-    // XXX excute - > render했는데, 적절한 네이밍인가요?
-    const render = async () => {
-        view(await model());
-    };
 
-    controller();
+    init();
 
     return {
         destroy : destroy
@@ -93,10 +84,8 @@ function Timeline(param = {}) {
 
 function Root() {
 
-    const param1 = {
+    const paramGrid = {
         url : 'https://my-json-server.typicode.com/it-crafts/mockapi/timeline/',
-        urlInfo : 'https://my-json-server.typicode.com/it-crafts/mockapi/timeline/' + "info",
-        selector : "#app",
         template : `<div class="Nnq7C weEfm"><div class="v1Nh3 kIKUG _bz0w"><a href="javascript:;"><div class="eLAPa">
                         <div class="KL4Bh"><img class="FFVAD" decoding="auto" src="https://raw.githubusercontent.com/it-crafts/mockapi/master{{src1}}" style="object-fit: cover;"></div>
                         <div class="_9AhH0"></div></div><div class="u7YqG"><span aria-label="슬라이드" class="mediatypesSpriteCarousel__filled__32 u-__7"></span></div></a></div><div class="v1Nh3 kIKUG _bz0w"><a href="javascript:;">
@@ -107,10 +96,8 @@ function Root() {
                         <div class="u7YqG"><span aria-label="슬라이드" class="mediatypesSpriteCarousel__filled__32 u-__7"></span></div></a></div></div>`
     }
 
-    const param2 = {
+    const paramFeed = {
          url : 'https://my-json-server.typicode.com/it-crafts/mockapi/feed/',
-         urlInfo : 'https://my-json-server.typicode.com/it-crafts/mockapi/feed/' + 'info',
-         selector : '#feed',
          template :  `<article class="M9sTE h0YNM SgTZ1 "><header class="Ppjfr UE9AK wdOqh">
             <div class="RR-M- h5uC0 mrq0Z" role="button" tabindex="0">
                 <canvas class="CfWVH" height="126" width="126" style="position: absolute; top: -5px; left: -5px; width: 42px; height: 42px;"></canvas><span class="_2dbep " role="link" tabindex="0" style="width: 32px; height: 32px;"><img alt="twicetagram님의 프로필 사진" class="_6q-tv" src="https://scontent-icn1-1.cdninstagram.com/vp/60d5672c78325263e8a9b6d7bf4d8550/5E87F77A/t51.2885-19/s150x150/14350502_2130269970532564_1274547492301570048_a.jpg?_nc_ht=scontent-icn1-1.cdninstagram.com"></span>
@@ -184,57 +171,42 @@ function Root() {
     
 
     const clickEvent = async function(e) {
-    
+        e.preventDefault();
         if('' === _loading.style.display) {
             return;
         }
+
         // 탭 하이라이트
-        let targetParent = this.parentNode.childNodes;
-
-        targetParent.forEach(function(crr) {
-            if (crr.childNodes.length !== 0) {
-                crr.className = '_9VEo1';
-                crr.childNodes[0].className = crr.childNodes[0].className.replace(/blue/gi, 'grey');
-            }
-        });
-
         this.className = '_9VEo1 T-jvg';
-        this.children[0].className = this.children[0].className.replace(/grey/gi, 'blue');
+        this.children[0].className = this.children[0].className.replace(/grey/, 'blue');
+        [].slice.call(this.parentNode.children)
+        .filter(tab => this !== tab)
+        .forEach(tab => {
+            tab.className = '_9VEo1';
+            tab.childNodes[0].className = tab.childNodes[0].className.replace(/blue/, 'grey');
+        });
         
         // 기존 app의 이벤트를 제거한다
         module.destroy();
-
-
         // 탭 클릭 이벤트
-        if (this.children[0].className.indexOf('grid') > -1) {
-            
-            // timeline을 호출한다
-            
-            module = new Timeline(param1);  
-        } else if (this.children[0].className.indexOf('list') > -1) {
-
-            const appDiv = document.querySelector("#app");
-            appDiv.innerHTML = `<div style="flex-direction: column;" id="feed">
-            </div>`;
-            
-            // feed를 호출한다.
-            module = new Timeline(param2); 
-        } else if (this.children[0].className.indexOf('up') > -1) {
-
-            // timeline을 호출한다
-            module = new Timeline(param1);  
+        switch (this.pathname) {
+            case '/list':
+                module = new Timeline('#app', paramGrid);  
+                break;
+            case '/feed':
+                module = new Timeline('#app', paramFeed);
+                break;
+            case '/up':
+                module = new Timeline('#app', paramGrid);  
+                break;
         }
-                
-        
     };
      // TODO Module과 동일하게 이벤트 붙이고 뗄 수 있는 구조로 고도화 해주세요 + destroy도 만들어주세요
     document.querySelectorAll('.fx7hk > a').forEach(tabButton => {
         tabButton.addEventListener('click', clickEvent);
     });
 
-    let module = new Timeline(param1);    
+    let module = new Timeline('#app', paramGrid);    
 }
 
 const root = new Root();
-
-
