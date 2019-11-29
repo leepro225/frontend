@@ -28,8 +28,8 @@ const f4 = (param1, param2) => {
 }
 
 const main = async () => {
-    const result = await Promise.all([f1(), sub()]);
-    const d = await f4(result[0], result[1]);
+    const [a, c] = await Promise.all([f1(), sub()]);
+    const d = await f4(a, c);
     return d;
 }
 const sub = async () => {
