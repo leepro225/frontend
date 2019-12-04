@@ -105,9 +105,10 @@ function DetailDescription(param = {}) {
 
     infoDiv.innerHTML = _tamplate;
 }
-
+// TODO destroy 가능하도록 해주세요
 function DetailImage(param = {}) {
     const ltEKPDiv = document.querySelector(param.selector);
+    // TODO 로우 데이터 가공은 컴포넌트의 외부에서 해주세요
     const imageList = param.data.data.detailList;
     const _totalPage = imageList.length;
     let _page = 2;
@@ -118,23 +119,22 @@ function DetailImage(param = {}) {
         html += _tamplate.replace(/{{ *(\w+) *}}/g, data || '');
     });
     
+    // FIXME 슬라이더 클릭이벤트가 죽었습니다 - 컴포넌트 뷰 영역 이외에 영향을 제거 해주세요
     ltEKPDiv.innerHTML += html;
     
+    // TODO 1 하드코딩 걷어내고 로직 공통화 해주세요
     ltEKPDiv.children[1].innerHTML = ltEKPDiv.children[1].innerHTML.replace('data-src', 'src');
     
-    const scrollEvent = function() {
-    
+    // FIXME 쓰로틀링 도입하여 이미지가 하나씩 로드될 수 있도록 해주세요
+    const scrollEvent = function() {    
         if(pageYOffset + document.scrollingElement.offsetHeight < document.body.scrollHeight * 0.9) { 
             return;
         }
-
         ltEKPDiv.children[_page].innerHTML = ltEKPDiv.children[_page].innerHTML.replace('data-src', 'src');
-        // XXX 페이지가 하나씩..증가하지 않습니다....
         _page++
-
         if(_page > _totalPage) {
             removeEvent();
-        }   
+        }
     }
     
     const addEvent = async () => {
@@ -167,6 +167,7 @@ const detail = (() => {
     
     const _create = async () => {
         const data = await common.getData(_url + 1);
+        // TODO 로우데이터를 직접 전달하는 게 아닌, 각 컴포넌트에서 필요한 데이터만 정제하여 내려주세요
         _slider = new DetailSlider({ selector: '#slider', data: data });
         _description = new DetailDescription({ selector: '#info', data: data });
         _image = new DetailImage({ selector: '.ltEKP', data: data });
