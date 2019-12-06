@@ -13,15 +13,14 @@ function DetailSlider(param = {}) {
     let total = 1;
 
     const create = async () => {
-        total = param.data.data.imgList.length;
-        renderImg(ul, param.data.data, width);
+        total = param.data.imgList.length;
+        renderImg(ul, param.data, width);
         addEvent();
     }
 
     const destroy = () => {
         removeEvent();
     }
-
     // TODO left/right 합칠 수 있으면 합치기
     const addEvent = () => {
         if(page <= 1) { leftBtn.style.display = 'none'; }
@@ -81,7 +80,7 @@ function DetailDescription(param = {}) {
     const _tamplate = `<section class="ltpMr Slqrh"><span class="fr66n"><button class="dCJp8 afkep"><span aria-label="좋아요" class="glyphsSpriteHeart__outline__24__grey_9 u-__7"></span></button></span><span class="_15y0l"><button class="dCJp8 afkep"><span aria-label="댓글 달기" class="glyphsSpriteComment__outline__24__grey_9 u-__7"></span></button></span><span class="_5e4p"><button class="dCJp8 afkep"><span aria-label="게시물 공유" class="glyphsSpriteDirect__outline__24__grey_9 u-__7"></span></button></span><span class="wmtNn"><button class="dCJp8 afkep"><span aria-label="저장" class="glyphsSpriteSave__outline__24__grey_9 u-__7"></span></button></span></section><section class="EDfFK ygqzn">
                         <div class=" Igw0E IwRSH eGOV_ ybXk5 vwCYk ">
                             <div class="Nm9Fw">
-                                <a class="zV_Nj" href="javascript:;">좋아요 <span>${param.data.data.clipCount}</span>개</a>
+                                <a class="zV_Nj" href="javascript:;">좋아요 <span>${param.data.clipCount}</span>개</a>
                             </div>
                         </div>
                         </section>
@@ -93,48 +92,51 @@ function DetailDescription(param = {}) {
                                         <div class="C7I1f X7jCj">
                                             <div class="C4VMK">
                                                 <h2 class="_6lAjh"><a class="FPmhX notranslate TlrDj" title="twicetagram" href="javascript:;">twicetagram</a></h2>
-                                                <span>${param.data.data.text}</span>
+                                                <span>${param.data.text}</span>
                                             </div>
                                         </div>
                                     </div>
                                     </li>
                                 </div>
-                                <li class="lnrre"><button class="Z4IfV sqdOP yWX7d y3zKF " type="button">댓글 <span>${param.data.data.commentCount}</span>개 모두 보기</button></li>
+                                <li class="lnrre"><button class="Z4IfV sqdOP yWX7d y3zKF " type="button">댓글 <span>${param.data.commentCount}</span>개 모두 보기</button></li>
                             </ul>
                         </div>`;
-
     infoDiv.innerHTML = _tamplate;
 }
-// TODO destroy 가능하도록 해주세요
+
 function DetailImage(param = {}) {
     const ltEKPDiv = document.querySelector(param.selector);
-    // TODO 로우 데이터 가공은 컴포넌트의 외부에서 해주세요
-    const imageList = param.data.data.detailList;
+    const imageList = param.data;
     const _totalPage = imageList.length;
     let _page = 2;
     let _tamplate = `<article class="QBXjJ M9sTE h0YNM SgTZ1 Tgarh " id="description"><img style="width: 100%; height: auto;" data-src="${imgPath}{{ src }}"></article>`;
     let html = '';
-    
+
     imageList.forEach(data => {
         html += _tamplate.replace(/{{ *(\w+) *}}/g, data || '');
     });
     
-    // FIXME 슬라이더 클릭이벤트가 죽었습니다 - 컴포넌트 뷰 영역 이외에 영향을 제거 해주세요
+     // FIXME 슬라이더 클릭이벤트가 죽었습니다 - 컴포넌트 뷰 영역 이외에 영향을 제거 해주세요
     ltEKPDiv.innerHTML += html;
     
     // TODO 1 하드코딩 걷어내고 로직 공통화 해주세요
     ltEKPDiv.children[1].innerHTML = ltEKPDiv.children[1].innerHTML.replace('data-src', 'src');
     
+    
     // FIXME 쓰로틀링 도입하여 이미지가 하나씩 로드될 수 있도록 해주세요
-    const scrollEvent = function() {    
+    const scrollEvent = function() {
+    
         if(pageYOffset + document.scrollingElement.offsetHeight < document.body.scrollHeight * 0.9) { 
             return;
         }
+
         ltEKPDiv.children[_page].innerHTML = ltEKPDiv.children[_page].innerHTML.replace('data-src', 'src');
+        // XXX 페이지가 하나씩..증가하지 않습니다....
         _page++
+
         if(_page > _totalPage) {
             removeEvent();
-        }
+        }   
     }
     
     const addEvent = async () => {
@@ -145,6 +147,15 @@ function DetailImage(param = {}) {
     }
 
     addEvent();
+
+    const destroy = () => {
+        removeEvent()
+        ltEKPDiv.innerHTML = null;
+    }
+
+    return {
+        destroy : destroy
+    }
 }
 
 const common = {
@@ -167,10 +178,9 @@ const detail = (() => {
     
     const _create = async () => {
         const data = await common.getData(_url + 1);
-        // TODO 로우데이터를 직접 전달하는 게 아닌, 각 컴포넌트에서 필요한 데이터만 정제하여 내려주세요
-        _slider = new DetailSlider({ selector: '#slider', data: data });
-        _description = new DetailDescription({ selector: '#info', data: data });
-        _image = new DetailImage({ selector: '.ltEKP', data: data });
+        _slider = new DetailSlider({ selector: '#slider', data: data.data });
+        _description = new DetailDescription({ selector: '#info', data: data.data });
+        _image = new DetailImage({ selector: '.ltEKP', data: data.data.detailList });
     }
 
     const destroy = () => {
