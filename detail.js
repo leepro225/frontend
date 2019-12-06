@@ -102,41 +102,69 @@ function DetailDescription(param = {}) {
                             </ul>
                         </div>`;
     infoDiv.innerHTML = _tamplate;
+    return {
+        destroy() {
+            // TODO 추가
+        }
+    }
 }
 
 function DetailImage(param = {}) {
-    const ltEKPDiv = document.querySelector(param.selector);
+    const parentDiv = document.querySelector(param.selector);
     const imageList = param.data;
     const _totalPage = imageList.length;
-    let _page = 2;
     let _tamplate = `<article class="QBXjJ M9sTE h0YNM SgTZ1 Tgarh " id="description"><img style="width: 100%; height: auto;" data-src="${imgPath}{{ src }}"></article>`;
-    let html = '';
+    let imgList; // 가변리스트
+    let list;
 
-    imageList.forEach(data => {
-        html += _tamplate.replace(/{{ *(\w+) *}}/g, data || '');
-    });
+    const init = () => {
+        imgList = renderImgs(parentDiv);
+        list = imgList.slice();
+        loadImgMore(imgList);
+        if(1 < imgList.length) {
+            addEvent();
+        }
+    }
+
+    const renderImgs = (parent) => {
+        const dummy = document.createElement('template');
+        imageList.forEach(data => {
+            dummy.innerHTML += _tamplate.replace(/{{ *(\w+) *}}/g, data || '');
+        });
+        const list = [].slice.call(dummy.content.children)
+        parent.appendChild(dummy.content);
+        return list;
+    }
     
-     // FIXME 슬라이더 클릭이벤트가 죽었습니다 - 컴포넌트 뷰 영역 이외에 영향을 제거 해주세요
-    ltEKPDiv.innerHTML += html;
+    const loadImgMore = (list) => {
+        const article = list.shift();
+        if(!article) {
+            return;
+        }
+        const img = article.firstElementChild;
+        img.src = img.dataset.src;
+        delete img.dataset.src;
+        return img;
+    }
     
-    // TODO 1 하드코딩 걷어내고 로직 공통화 해주세요
-    ltEKPDiv.children[1].innerHTML = ltEKPDiv.children[1].innerHTML.replace('data-src', 'src');
-    
-    
-    // FIXME 쓰로틀링 도입하여 이미지가 하나씩 로드될 수 있도록 해주세요
+    let isLoading = false;
     const scrollEvent = function() {
-    
+        if(isLoading) {
+            return;
+        }
         if(pageYOffset + document.scrollingElement.offsetHeight < document.body.scrollHeight * 0.9) { 
             return;
         }
 
-        ltEKPDiv.children[_page].innerHTML = ltEKPDiv.children[_page].innerHTML.replace('data-src', 'src');
-        // XXX 페이지가 하나씩..증가하지 않습니다....
-        _page++
-
-        if(_page > _totalPage) {
+        isLoading = true;
+        const img = loadImgMore(imgList);
+        if(!img) {
             removeEvent();
-        }   
+            return;
+        }
+        img.onload = e => {
+            isLoading = false;
+        }
     }
     
     const addEvent = async () => {
@@ -146,13 +174,14 @@ function DetailImage(param = {}) {
         window.removeEventListener('scroll', scrollEvent);
     }
 
-    addEvent();
-
     const destroy = () => {
         removeEvent()
-        ltEKPDiv.innerHTML = null;
+        list.forEach(element => {
+            element.parentNode.removeChild(element);
+        });
     }
 
+    init();
     return {
         destroy : destroy
     }
@@ -188,6 +217,8 @@ const detail = (() => {
         _slider = null;
         _description && _description.destroy();
         _description = null;
+        _image && _image.destroy();
+        _image = null;
     }
 
     _create();
