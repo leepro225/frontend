@@ -148,8 +148,9 @@ function DetailImage(param = {}) {
     }
     
     let isLoading = false;
+    let timeouts = true;
     const scrollEvent = function() {
-        if(isLoading) {
+        if(isLoading || !timeouts) {
             return;
         }
         if(pageYOffset + document.scrollingElement.offsetHeight < document.body.scrollHeight * 0.9) { 
@@ -165,6 +166,10 @@ function DetailImage(param = {}) {
         img.onload = e => {
             isLoading = false;
         }
+        timeouts = false;
+        setTimeout(() => {
+            timeouts = true;
+        }, 100);
     }
     
     const addEvent = async () => {
